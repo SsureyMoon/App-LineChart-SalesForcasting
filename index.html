@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html ng-app='SalesShow'>
+  <head>
+    <link rel='stylesheet' type='text/css' href = './dist/css/bootstrap.min.css'/>
+    <link rel='stylesheet' type='text/css' href = './dist/css/d3style.css'/>
+
+
+    <script type='text/javascript' src='./js/jQuery.js'></script>
+    <script type='text/javascript' src='./js/d3.min.js'></script>
+    <script type='text/javascript' src='./js/draw.js'></script>
+
+    <script type='text/javascript' src='./js/angular.min.js'></script>
+    <script type='text/javascript' src='./js/app.js'></script>
+
+
+  </head>
+  <body>
+    <div>
+      <div class="title" style="margin-left:20px">
+        <h2>Forecasting using Historical data</h2>
+      </div>
+      <div class="intro" style="margin-left:40px;text-align:left;margin-right:40px;">
+        <blockquote>
+          The Walmart Weekly Sales Forecasting competition asks competitors to predict the weekly sales
+          for a set of store/department pairs in 2013, given the weekly sales from 2010-2012.
+          (Reference: <a href="https://www.kaggle.com/c/walmart-recruiting-store-sales-forecasting">Kaggle Competition</a>)
+        </blockquote>
+        <ul>
+          <li>
+            The train.csv and test.csv files contain the weekly sales for each (store, department, date) triple. Note that the test file contains null entries for the weekly sales column, as expected
+          </li>
+          <li>
+            The features.csv file contains the temperature, fuel price, markdowns, CPI, unemployment rate, and a holiday indicator for each (store, department, date) triple
+            <li style="margin-left:20px;font-weight:bold;list-style-type:square">
+              CPI and Unemployment rate and anonymous Markdown data contain a lot of missing data.
+            </li>
+          </li>
+          <li>
+            The stores.csv file contains the size and type of each store
+          </li>
+        </ul>
+        <blockquote>
+          We combine all files into two distinct datasets–the training set and test set. Each set contains all features and the weekly sales for each store, department, date .  The training data contains weekly sales from February 2010 to October 2012, and the test data contains weekly sales from November 2012 to July 2013.
+        </blockquote>
+      </div>
+      <div class="mi" style="margin-left:40px;text-align:left;margin-right:40px;">
+        <h3>Missing data imputation</h3>
+        <ol>
+          <li>
+            <h4>CPI and Unemployment rate imputation with ARIMA</h4>
+            <blockquote>Missing data in CPI and Unemployment rate has time-varying chracteristic. We used ARIMA model to forecast CPI and Unemployment rate of each region where Walmart stores are. The package <b>forecast</b> in <b>R</b> is used to build the ARIMA model.
+              (Reference: <a href="http://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average">ARIMA in Wikipedia</a>)
+            </blockquote>
+            <div style="margin-left:20px">
+              <img src='./images/CPI and UR 1.jpeg'/>
+            </div>
+            <div style="margin-left:20px">
+              <img src='./images/CPI and UR 17.jpeg'/>
+            </div>
+          </li>
+          <li>
+            <h4>Anonymous Markdown imputation with Iterative Regression</h4>
+            <blockquote>We needed to impute missing data in Markdowns. Since Walmart wants to hide where that data came from, we need to figure out the characteristics of our missing data.
+              There are <b>24040</b> rows contain at leasst one missing Markdown.
+              We used Iterative regression imputation to impute missing data in Markdowns. According to the note [1], the basic concept of iterative regression imputation is like below:
+              <ul>Suppose the variables with missingness are a matrix Y with columns Y(1) , . . . , Y(K ) and the fully observed predictors are X.
+                <small>(Andrew Gelman, Jennifer Hill (2006), "Missing-data imputation", Chapter 25 in Data Analysis Using Regression and Multilevel/Hierarchical Models, Cambridge University Press)</small>
+              </ul>
+              The package <b>mi</b> in <b>R</b> is used to build the Iterative regressin model.<br>
+              Histograms are plotted to verify the imputed missing value. <font color="blue">Blue</font> histogram means original data, while <font color="red">red</font> histogram means imputed data.
+            </blockquote>
+            <div style="margin-left:20px">
+              <img src='./images/Markdown2_Store35.jpeg'/>
+            </div>
+            <div style="margin-left:20px">
+              <img src='./images/mk 3 4 store 36.jpeg'/>
+            </div>
+          </li>
+        </ol>
+      </div>
+      <div class="modeling" style="margin-left:40px;text-align:left;margin-right:40px;">
+        <h3>Modeling</h3>
+        <ol>
+          <li>
+            <h4>Neural Network</h4>
+            <blockquote>As one of the learning algorithm, we choose Single-layer Neural Network, because we have complex retail data about different stores and departments all over the United States plus some anonymous features.<br>
+              R is used to handle data, input normalize by 1 to C dummy encoding, and make training set and test set files for Python.<br>
+              The package <b>PyBrain</b> in <b>Python</b> is used to build the neural network model.(Reference: <a href="http://pybrain.org/">PyBrain</a>)<br>
+              As the number of iteration increases, prediction fits the historical data.
+            </blockquote>
+            <div>
+              <img src='./images/resize_animationNeural.gif'/>
+            </div>
+            <blockquote>One of the problems of neural model is that it takes a long time than other model<br>
+              It is hard to get the result of all of 99 deaprtments cross 45 stores. Theare are about 4500 departments to fit.
+            </blockquote>
+          </li>
+          <li>
+            <h4>Support vector machines</h4>
+            <blockquote>The other of the learning algorithm, we choose SVM(Support Vector Machines), because data set has a large attirbutes size(213) compaare to the target size(1).<br>
+              SVM is much faster than Nueral Network, so we could apply SVM to all of departments cross all stores, and get the reuslt.
+              R is also used to handle data, input normalize by 1 to C dummy encoding, and make training set and test set files for Python.<br>
+              The package <b>scikit-learn</b> in <b>Python</b> is used to build the SVM model.(Reference: <a href="http://scikit-learn.org/stable/">scikit-learn</a>)<br>
+              Grid search method is used to find the best parameters.
+            </blockquote>
+            <div style="margin-left:40px;">
+              <img src='./images/heatmapofStore94.png' width=400 height=400px/>
+            </div>
+            <blockquote>We built linecharts for all deapartments and stores.<br>
+              You can try seleting a store and a department to see the result.<br>
+              Each line chart shows historical data and predicted data based on the historical data.<br>
+            </blockquote>
+          </li>
+
+          <div class="container" ng-controller = "SelectController as select">
+            <ul>
+              <h4>Weekly sales of Store: {{select.store}}, Department {{select.depart}}</h3>
+                <em class="pull-right">{{product.price | currency}}</em>
+              </h3>
+              <div id='graph_window'></div>
+              <div>
+                <div style="float:left;padding-right:135px;">Select a store:</div>
+                <div>Select a department:</div>
+                <div style="float:left;padding-right:25px;">
+                  <fieldset class="form-group">
+                    <select class="form-control" ng-options="obj for obj in select.listofstores"
+                    title="Store" ng-model="select.store" ng-change="select.draw(select.store,select.depart)">
+                    <option value="">Select a store</option>
+                  </select>
+                </fieldset>
+              </div>
+              <div>
+                <fieldset class="form-group">
+                  <select class="form-control" ng-options="obj for obj in select.listofdepartments"
+                  title="Department" ng-model="select.depart" ng-change="select.draw(select.store,select.depart)">
+                  <option value="">Select a department</option>
+                </select>
+              </fieldset>
+            </div>
+          </div>
+          <section class = "tab" ng-controller = "TabController as tab_ctrl">
+            <ul class="nav nav-pills">
+              <li ng-class="{active:tab_ctrl.isSet(1)}">
+                <a href ng-click=tab_ctrl.setTab(1)>Description</a>
+              </li>
+              <!-- -->
+              <li ng-class="{active:tab_ctrl.isSet(2)}">
+                <a href ng-click=tab_ctrl.setTab(2)>Detail</a>
+              </li>
+            </ul>
+            <div ng-show=tab_ctrl.isSet(1)>
+              <h4>Description</h4>
+              <blockquote>The preiction fits historical data for most depratments, if they have strong seasonality.<br>
+                However, the predicton does not fit vert well for some departments, if they does not have strong seasonality</blockquote>
+            </div>
+            <div ng-show=tab_ctrl.isSet(2)>
+              <h4>Detail</h4>
+              <blockquote>
+                Difference:<br>
+                <ul>
+                  <li>${{tab_ctrl.error_rate[select.depart-1][select.store-1]}}</li>
+                </ul>
+                Parameter:<br>
+                <ul>
+                  <li>C:{{tab_ctrl.parameters.params[select.depart-1].C}}</li>
+                  <li>Gamma:{{tab_ctrl.parameters.params[select.depart-1].Gamma}}</li>
+                </ul>
+              </blockquote>
+            </div>
+          </section>
+        </ul>
+      </div>
+
+      </ol>
+    </div>
+  </div>
+  </body>
+</html>
